@@ -550,14 +550,14 @@ public class World{
         }
     }
 
-    public static boolean raycast(int x1, int y1, int x2, int y2, Raycaster cons){
-        int x = x1, dx = Math.abs(x2 - x), sx = x < x2 ? 1 : -1;
-        int y = y1, dy = Math.abs(y2 - y), sy = y < y2 ? 1 : -1;
+    public static boolean raycast(RaycastParams params){
+        int x = params.getX1(), dx = Math.abs(params.getX2() - x), sx = x < params.getX2() ? 1 : -1;
+        int y = params.getY1(), dy = Math.abs(params.getY2() - y), sy = y < params.getY2() ? 1 : -1;
         int e2, err = dx - dy;
 
         while(true){
-            if(cons.accept(x, y)) return true;
-            if(x == x2 && y == y2) return false;
+            if (params.getCons().accept(x, y)) return true;
+            if (x == params.getX2() && y == params.getY2()) return false;
 
             e2 = 2 * err;
             if(e2 > -dy){
