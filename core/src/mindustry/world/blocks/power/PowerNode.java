@@ -361,11 +361,12 @@ public class PowerNode extends PowerBlock{
         return insulated(tile.tileX(), tile.tileY(), other.tileX(), other.tileY());
     }
 
-    public static boolean insulated(int x, int y, int x2, int y2){
-        return World.raycast(x, y, x2, y2, (wx, wy) -> {
+    public static boolean insulated(int x, int y, int x2, int y2) {
+        RaycastParams params = new RaycastParams(x, y, x2, y2, (wx, wy) -> {
             Building tile = world.build(wx, wy);
             return tile != null && tile.isInsulated();
         });
+        return World.raycast(params);
     }
 
     public class PowerNodeBuild extends Building{

@@ -35,14 +35,16 @@ public class HugAI extends AIController{
         }
 
         //raycast for target
-        if(target != null && unit.within(target, unit.type.range) && !World.raycast(unit.tileX(), unit.tileY(), target.tileX(), target.tileY(), (x, y) -> {
+        if(target != null && unit.within(target, unit.type.range) && !World.raycast(new RaycastParams(
+                unit.tileX(), unit.tileY(), target.tileX(), target.tileY(), (x, y) -> {
             for(Point2 p : Geometry.d4c){
                 if(!unit.canPass(x + p.x, y + p.y)){
                     return true;
                 }
             }
             return false;
-        })){
+        }
+        ))){
             if(unit.within(target, (unit.hitSize + (target instanceof Sized s ? s.hitSize() : 1f)) * 0.5f)){
                 //circle target
                 unit.movePref(vec.set(target).sub(unit).rotate(90f).setLength(unit.speed()));

@@ -49,7 +49,7 @@ public class SuicideAI extends GroundAI{
                 blockedByBlock = false;
 
                 //raycast for target
-                boolean blocked = World.raycast(unit.tileX(), unit.tileY(), target.tileX(), target.tileY(), (x, y) -> {
+                boolean blocked = World.raycast(new RaycastParams(unit.tileX(), unit.tileY(), target.tileX(), target.tileY(), (x, y) -> {
                     for(Point2 p : Geometry.d4c){
                         Tile tile = Vars.world.tile(x + p.x, y + p.y);
                         if(tile != null && tile.build == target) return false;
@@ -61,7 +61,7 @@ public class SuicideAI extends GroundAI{
                         }
                     }
                     return false;
-                });
+                }));
 
                 //shoot when there's an enemy block in the way
                 if(blockedByBlock){

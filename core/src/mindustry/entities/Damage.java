@@ -136,8 +136,12 @@ public class Damage{
     public static @Nullable Building findAbsorber(Team team, float x1, float y1, float x2, float y2){
         tmpBuilding = null;
 
-        boolean found = World.raycast(World.toTile(x1), World.toTile(y1), World.toTile(x2), World.toTile(y2),
-        (x, y) -> (tmpBuilding = world.build(x, y)) != null && tmpBuilding.team != team && tmpBuilding.block.absorbLasers);
+        RaycastParams params = new RaycastParams(World.toTile(x1), World.toTile(y1), World.toTile(x2), World.toTile(y2), (x, y) -> {
+            tmpBuilding = world.build(x, y);
+            return tmpBuilding != null && tmpBuilding.team != team && tmpBuilding.block.absorbLasers;
+        });
+
+        boolean found = World.raycast(params);
 
         return found ? tmpBuilding : null;
     }
@@ -157,8 +161,12 @@ public class Damage{
 
         furthest = null;
 
-        boolean found = World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + vec.x), World.toTile(b.y + vec.y),
-        (x, y) -> (furthest = world.tile(x, y)) != null && furthest.team() != b.team && (furthest.build != null && furthest.build.absorbLasers()));
+        RaycastParams params = new RaycastParams(b.tileX(), b.tileY(), World.toTile(b.x + vec.x), World.toTile(b.y + vec.y), (x, y) -> {
+            furthest = world.tile(x, y);
+            return furthest != null && furthest.team() != b.team && (furthest.build != null && furthest.build.absorbLasers());
+        });
+
+        boolean found = World.raycast(params);
 
         return found && furthest != null ? Math.max(6f, b.dst(furthest.worldx(), furthest.worldy())) : length;
     }
@@ -176,8 +184,7 @@ public class Damage{
         distances.clear();
 
         if(b.type.collidesGround && b.type.collidesTiles){
-            World.raycast(b.tileX(), b.tileY(), World.toTile(b.x + vec.x), World.toTile(b.y + vec.y), (x, y) -> {
-                //add distance to list so it can be processed
+            RaycastParams params = new RaycastParams(b.tileX(), b.tileY(), World.toTile(b.x + vec.x), World.toTile(b.y + vec.y), (x, y) -> {
                 var build = world.build(x, y);
 
                 if(build != null && build.team != b.team && build.collide(b) && b.checkUnderBuild(build, x * tilesize, y * tilesize)){
@@ -191,6 +198,8 @@ public class Damage{
 
                 return false;
             });
+
+            World.raycast(params);
         }
 
         Units.nearbyEnemies(b.team, rect, u -> {
