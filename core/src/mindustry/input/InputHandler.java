@@ -1959,56 +1959,95 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         rotation * 90 - 90);
     }
 
-    void iterateLine(int startX, int startY, int endX, int endY, Cons<PlaceLine> cons){
-        Seq<Point2> points;
+    private boolean isDiagonalPlacement() {
         boolean diagonal = Core.input.keyDown(Binding.diagonal_placement);
-
-        if(Core.settings.getBool("swapdiagonal") && mobile){
+        if (Core.settings.getBool("swapdiagonal") && mobile) {
             diagonal = !diagonal;
         }
-
-        if(block != null && block.swapDiagonalPlacement){
+        if (block != null && block.swapDiagonalPlacement) {
             diagonal = !diagonal;
         }
+        return diagonal;
+    }
 
-        int endRotation = -1;
-        var start = world.build(startX, startY);
-        var end = world.build(endX, endY);
-        if(diagonal && (block == null || block.allowDiagonal)){
-            if(block != null && start instanceof ChainedBuilding && end instanceof ChainedBuilding
-            && block.canReplace(end.block) && block.canReplace(start.block)){
-                points = Placement.upgradeLine(startX, startY, endX, endY);
-            }else{
-                points = Placement.pathfindLine(block != null && block.conveyorPlacement, startX, startY, endX, endY);
-            }
-        }else if(block != null && block.allowRectanglePlacement){
-            points = Placement.normalizeRectangle(startX, startY, endX, endY, block.size);
-        }else{
-            points = Placement.normalizeLine(startX, startY, endX, endY);
+    private Seq<Point2> getDiagonalPoints(int startX, int startY, int endX, int endY) {
+        if (block != null && world.build(startX, startY) instanceof ChainedBuilding && world.build(endX, endY) instanceof ChainedBuilding
+                && block.canReplace(world.build(endX, endY).block) && block.canReplace(world.build(startX, startY).block)) {
+            return Placement.upgradeLine(startX, startY, endX, endY);
+        } else {
+            return Placement.pathfindLine(block != null && block.conveyorPlacement, startX, startY, endX, endY);
         }
-        if(points.size > 1 && end instanceof ChainedBuilding){
+    }
+
+    private Seq<Point2> getPoints(int startX, int startY, int endX, int endY) {
+        boolean diagonal = isDiagonalPlacement();
+
+        if (diagonal && (block == null || block.allowDiagonal)) {
+            return getDiagonalPoints(startX, startY, endX, endY);
+        } else if (block != null && block.allowRectanglePlacement) {
+            return Placement.normalizeRectangle(startX, startY, endX, endY, block.size);
+        } else {
+            return Placement.normalizeLine(startX, startY, endX, endY);
+        }
+    }
+
+    private int getEndRotation(Seq<Point2> points, int endX, int endY) {
+        if (points.size > 1 && world.build(endX, endY) instanceof ChainedBuilding) {
             Point2 secondToLast = points.get(points.size - 2);
-            if(!(world.build(secondToLast.x, secondToLast.y) instanceof ChainedBuilding)){
-                endRotation = end.rotation;
+            if (!(world.build(secondToLast.x, secondToLast.y) instanceof ChainedBuilding)) {
+                return world.build(endX, endY).rotation;
             }
         }
+        return -1;
+    }
 
-        if(block != null){
+    private void updateBlockPlacementPath(Seq<Point2> points, boolean diagonal) {
+        if (block != null) {
             block.changePlacementPath(points, rotation, diagonal);
         }
+    }
 
+    private int getBaseRotation(int startX, int startY, int endX, int endY) {
         float angle = Angles.angle(startX, startY, endX, endY);
         int baseRotation = rotation;
-        if(!overrideLineRotation || diagonal){
-            baseRotation = (startX == endX && startY == endY) ? rotation : ((int)((angle + 45) / 90f)) % 4;
+        if (!overrideLineRotation || isDiagonalPlacement()) {
+            baseRotation = (startX == endX && startY == endY) ? rotation : ((int) ((angle + 45) / 90f)) % 4;
         }
+        return baseRotation;
+    }
+
+    private boolean blockOverlapCheck(Point2 point) {
+        return block != null && Tmp.r2.setSize(block.size * tilesize).setCenter(point.x * tilesize + block.offset, point.y * tilesize + block.offset).overlaps(Tmp.r3);
+    }
+
+    private int getRotation(Point2 point, Point2 next, int baseRotation, int endRotation, int i, Seq<Point2> points) {
+        int result = baseRotation;
+        if (next != null) {
+            result = Tile.relativeTo(point.x, point.y, next.x, next.y);
+        } else if (endRotation != -1) {
+            result = endRotation;
+        } else if (block.conveyorPlacement && i > 0) {
+            Point2 prev = points.get(i - 1);
+            result = Tile.relativeTo(prev.x, prev.y, point.x, point.y);
+        }
+        return result;
+    }
+
+    void iterateLine(int startX, int startY, int endX, int endY, Cons<PlaceLine> cons){
+        Seq<Point2> points;
+        boolean diagonal = isDiagonalPlacement();
+        points = getPoints(startX, startY, endX, endY);
+        
+        int endRotation = getEndRotation(points, endX, endY);
+        updateBlockPlacementPath(points, diagonal);
+        int baseRotation = getBaseRotation(startX, startY, endX, endY);
 
         Tmp.r3.set(-1, -1, 0, 0);
 
         for(int i = 0; i < points.size; i++){
             Point2 point = points.get(i);
 
-            if(block != null && Tmp.r2.setSize(block.size * tilesize).setCenter(point.x * tilesize + block.offset, point.y * tilesize + block.offset).overlaps(Tmp.r3)){
+            if(blockOverlapCheck(point)){
                 continue;
             }
 
@@ -2016,15 +2055,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             line.x = point.x;
             line.y = point.y;
             if(!overrideLineRotation || diagonal){
-                int result = baseRotation;
-                if(next != null){
-                    result = Tile.relativeTo(point.x, point.y, next.x, next.y);
-                }else if(endRotation != -1){
-                    result = endRotation;
-                }else if(block.conveyorPlacement && i > 0){
-                    Point2 prev = points.get(i - 1);
-                    result = Tile.relativeTo(prev.x, prev.y, point.x, point.y);
-                }
+                int result = getRotation(point, next, baseRotation, endRotation, i, points);
                 if(result != -1){
                     line.rotation = result;
                 }
