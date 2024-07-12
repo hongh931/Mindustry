@@ -524,17 +524,18 @@ public class World{
     }
 
     public static void raycastEachWorld(float x0, float y0, float x1, float y1, Raycaster cons){
-        raycastEach(toTile(x0), toTile(y0), toTile(x1), toTile(y1), cons);
+        RaycastParams params = new RaycastParams(toTile(x0), toTile(y0), toTile(x1), toTile(y1), cons);
+        raycastEach(params);
     }
 
-    public static void raycastEach(int x1, int y1, int x2, int y2, Raycaster cons){
-        int x = x1, dx = Math.abs(x2 - x), sx = x < x2 ? 1 : -1;
-        int y = y1, dy = Math.abs(y2 - y), sy = y < y2 ? 1 : -1;
+    public static void raycastEach(RaycastParams params){
+        int x = params.getX1(), dx = Math.abs(params.getX2() - x), sx = x < params.getX2() ? 1 : -1;
+        int y = params.getY1(), dy = Math.abs(params.getY2() - y), sy = y < params.getY2() ? 1 : -1;
         int e2, err = dx - dy;
 
         while(true){
-            if(cons.accept(x, y)) break;
-            if(x == x2 && y == y2) break;
+            if(params.getCons().accept(x, y)) break;
+            if(x == params.getX2() && y == params.getY2()) break;
 
             e2 = 2 * err;
             if(e2 > -dy){
