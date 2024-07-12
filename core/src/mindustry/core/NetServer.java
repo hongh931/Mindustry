@@ -403,33 +403,34 @@ public class NetServer implements ApplicationListener{
             }else{
                 found = Groups.player.find(p -> p.name.equalsIgnoreCase(args[0]));
             }
+            sendPlayerMessage(found, player, cooldowns, args);
+        }
+    }
 
-            if(found != null){
-                if(found == player){
-                    player.sendMessage("[scarlet]You can't vote to kick yourself.");
-                }else if(found.admin){
-                    player.sendMessage("[scarlet]Did you really expect to be able to kick an admin?");
-                }else if(found.isLocal()){
-                    player.sendMessage("[scarlet]Local players cannot be kicked.");
-                }else if(found.team() != player.team()){
-                    player.sendMessage("[scarlet]Only players on your team can be kicked.");
-                }else{
-                    Timekeeper vtime = cooldowns.get(player.uuid(), () -> new Timekeeper(voteCooldown));
-
-                    if(!vtime.get()){
-                        player.sendMessage("[scarlet]You must wait " + voteCooldown/60 + " minutes between votekicks.");
-                        return;
-                    }
-
-                    VoteSession session = new VoteSession(found);
-                    session.vote(player, 1);
-                    Call.sendMessage(Strings.format("[lightgray]Reason:[orange] @[lightgray].", args[1]));
-                    vtime.reset();
-                    currentlyKicking = session;
-                }
+    private void sendPlayerMessage(Player found, Player player, ObjectMap<String, Timekeeper> cooldowns, String[] args){
+        if(found != null){
+            if(found == player){
+                player.sendMessage("[scarlet]You can't vote to kick yourself.");
+            }else if(found.admin){
+                player.sendMessage("[scarlet]Did you really expect to be able to kick an admin?");
+            }else if(found.isLocal()){
+                player.sendMessage("[scarlet]Local players cannot be kicked.");
+            }else if(found.team() != player.team()){
+                player.sendMessage("[scarlet]Only players on your team can be kicked.");
             }else{
-                player.sendMessage("[scarlet]No player [orange]'" + args[0] + "'[scarlet] found.");
+                Timekeeper vtime = cooldowns.get(player.uuid(), () -> new Timekeeper(voteCooldown));
+                if(!vtime.get()){
+                    player.sendMessage("[scarlet]You must wait " + voteCooldown/60 + " minutes between votekicks.");
+                    return;
+                }
+                VoteSession session = new VoteSession(found);
+                session.vote(player, 1);
+                Call.sendMessage(Strings.format("[lightgray]Reason:[orange] @[lightgray].", args[1]));
+                vtime.reset();
+                currentlyKicking = session;
             }
+        }else{
+            player.sendMessage("[scarlet]No player [orange]'" + args[0] + "'[scarlet] found.");
         }
     }
 
