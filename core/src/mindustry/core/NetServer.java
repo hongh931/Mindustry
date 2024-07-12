@@ -306,7 +306,7 @@ public class NetServer implements ApplicationListener{
         mods.eachClass(mod -> mod.registerClientCommands(clientCommands));
     }
 
-    private void registerCommands(){
+    private void registerHelpCommand(){
         clientCommands.<Player>register("help", "[page]", "Lists all commands.", (args, player) -> {
             if(args.length > 0 && !Strings.canParseInt(args[0])){
                 player.sendMessage("[scarlet]'page' must be a number.");
@@ -332,7 +332,9 @@ public class NetServer implements ApplicationListener{
             }
             player.sendMessage(result.toString());
         });
+    }
 
+    private void registerTeamMessageCommand(){
         clientCommands.<Player>register("t", "<message...>", "Send a message only to your teammates.", (args, player) -> {
             String message = admins.filterMessage(player, args[0]);
             if(message != null){
@@ -340,7 +342,9 @@ public class NetServer implements ApplicationListener{
                 Groups.player.each(p -> p.team() == player.team(), o -> o.sendMessage(raw, player, message));
             }
         });
+    }
 
+    private void registerAdminMessageCommand(){
         clientCommands.<Player>register("a", "<message...>", "Send a message only to admins.", (args, player) -> {
             if(!player.admin){
                 player.sendMessage("[scarlet]You must be an admin to use this command.");
@@ -350,8 +354,9 @@ public class NetServer implements ApplicationListener{
             String raw = "[#" + Pal.adminChat.toString() + "]<A> " + chatFormatter.format(player, args[0]);
             Groups.player.each(Player::admin, a -> a.sendMessage(raw, player, args[0]));
         });
+    }
 
-        //cooldowns per player
+    private void registerVoteKickCommand(){
         ObjectMap<String, Timekeeper> cooldowns = new ObjectMap<>();
 
         clientCommands.<Player>register("votekick", "[player] [reason...]", "Vote to kick a player with a valid reason.", (args, player) -> {
@@ -375,54 +380,60 @@ public class NetServer implements ApplicationListener{
                 return;
             }
 
-            if(args.length == 0){
-                StringBuilder builder = new StringBuilder();
-                builder.append("[orange]Players to kick: \n");
-
-                Groups.player.each(p -> !p.admin && p.con != null && p != player, p -> {
-                    builder.append("[lightgray] ").append(p.name).append("[accent] (#").append(p.id()).append(")\n");
-                });
-                player.sendMessage(builder.toString());
-            }else if(args.length == 1){
-                player.sendMessage("[orange]You need a valid reason to kick the player. Add a reason after the player name.");
-            }else{
-                Player found;
-                if(args[0].length() > 1 && args[0].startsWith("#") && Strings.canParseInt(args[0].substring(1))){
-                    int id = Strings.parseInt(args[0].substring(1));
-                    found = Groups.player.find(p -> p.id() == id);
-                }else{
-                    found = Groups.player.find(p -> p.name.equalsIgnoreCase(args[0]));
-                }
-
-                if(found != null){
-                    if(found == player){
-                        player.sendMessage("[scarlet]You can't vote to kick yourself.");
-                    }else if(found.admin){
-                        player.sendMessage("[scarlet]Did you really expect to be able to kick an admin?");
-                    }else if(found.isLocal()){
-                        player.sendMessage("[scarlet]Local players cannot be kicked.");
-                    }else if(found.team() != player.team()){
-                        player.sendMessage("[scarlet]Only players on your team can be kicked.");
-                    }else{
-                        Timekeeper vtime = cooldowns.get(player.uuid(), () -> new Timekeeper(voteCooldown));
-
-                        if(!vtime.get()){
-                            player.sendMessage("[scarlet]You must wait " + voteCooldown/60 + " minutes between votekicks.");
-                            return;
-                        }
-
-                        VoteSession session = new VoteSession(found);
-                        session.vote(player, 1);
-                        Call.sendMessage(Strings.format("[lightgray]Reason:[orange] @[lightgray].", args[1]));
-                        vtime.reset();
-                        currentlyKicking = session;
-                    }
-                }else{
-                    player.sendMessage("[scarlet]No player [orange]'" + args[0] + "'[scarlet] found.");
-                }
-            }
+            handleVoteKickArgs(args, player, cooldowns);
         });
+    }
 
+    private void handleVoteKickArgs(String[] args, Player player, ObjectMap<String, Timekeeper> cooldowns){
+        if(args.length == 0){
+            StringBuilder builder = new StringBuilder();
+            builder.append("[orange]Players to kick: \n");
+
+            Groups.player.each(p -> !p.admin && p.con != null && p != player, p -> {
+                builder.append("[lightgray] ").append(p.name).append("[accent] (#").append(p.id()).append(")\n");
+            });
+            player.sendMessage(builder.toString());
+        }else if(args.length == 1){
+            player.sendMessage("[orange]You need a valid reason to kick the player. Add a reason after the player name.");
+        }else{
+            Player found;
+            if(args[0].length() > 1 && args[0].startsWith("#") && Strings.canParseInt(args[0].substring(1))){
+                int id = Strings.parseInt(args[0].substring(1));
+                found = Groups.player.find(p -> p.id() == id);
+            }else{
+                found = Groups.player.find(p -> p.name.equalsIgnoreCase(args[0]));
+            }
+
+            if(found != null){
+                if(found == player){
+                    player.sendMessage("[scarlet]You can't vote to kick yourself.");
+                }else if(found.admin){
+                    player.sendMessage("[scarlet]Did you really expect to be able to kick an admin?");
+                }else if(found.isLocal()){
+                    player.sendMessage("[scarlet]Local players cannot be kicked.");
+                }else if(found.team() != player.team()){
+                    player.sendMessage("[scarlet]Only players on your team can be kicked.");
+                }else{
+                    Timekeeper vtime = cooldowns.get(player.uuid(), () -> new Timekeeper(voteCooldown));
+
+                    if(!vtime.get()){
+                        player.sendMessage("[scarlet]You must wait " + voteCooldown/60 + " minutes between votekicks.");
+                        return;
+                    }
+
+                    VoteSession session = new VoteSession(found);
+                    session.vote(player, 1);
+                    Call.sendMessage(Strings.format("[lightgray]Reason:[orange] @[lightgray].", args[1]));
+                    vtime.reset();
+                    currentlyKicking = session;
+                }
+            }else{
+                player.sendMessage("[scarlet]No player [orange]'" + args[0] + "'[scarlet] found.");
+            }
+        }
+    }
+
+    private void registerVoteCommand(){
         clientCommands.<Player>register("vote", "<y/n/c>", "Vote to kick the current player. Admin can cancel the voting with 'c'.", (arg, player) -> {
             if(currentlyKicking == null){
                 player.sendMessage("[scarlet]Nobody is being voted on.");
@@ -469,7 +480,9 @@ public class NetServer implements ApplicationListener{
                 currentlyKicking.vote(player, sign);
             }
         });
+    }
 
+    private void registerSyncCommand(){
         clientCommands.<Player>register("sync", "Re-synchronize world state.", (args, player) -> {
             if(player.isLocal()){
                 player.sendMessage("[scarlet]Re-synchronizing as the host is pointless.");
@@ -484,6 +497,15 @@ public class NetServer implements ApplicationListener{
                 netServer.sendWorldData(player);
             }
         });
+    }
+
+    private void registerCommands(){
+        registerHelpCommand();
+        registerTeamMessageCommand();
+        registerAdminMessageCommand();
+        registerVoteKickCommand();
+        registerVoteCommand();
+        registerSyncCommand();
     }
 
     public int votesRequired(){
