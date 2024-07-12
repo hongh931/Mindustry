@@ -192,10 +192,11 @@ public class SectorDamage{
 
         //TODO would be nice if this worked in a more generic way, with two different calculations and paths
         if(airOnly){
-            World.raycastEach(start.x, start.y, core.tileX(), core.tileY(), (x, y) -> {
+            RaycastParams params = new RaycastParams(start.x, start.y, core.tileX(), core.tileY(), (x, y) -> {
                 path.add(world.rawTile(x, y));
                 return false;
             });
+            World.raycastEach(params);
         }else{
             var field = pathfinder.getField(state.rules.waveTeam, Pathfinder.costGround, Pathfinder.fieldCore);
             boolean found = false;

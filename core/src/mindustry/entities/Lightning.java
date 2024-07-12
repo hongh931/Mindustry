@@ -50,17 +50,23 @@ public class Lightning{
                 bhit = false;
                 Vec2 from = lines.get(lines.size - 2);
                 Vec2 to = lines.get(lines.size - 1);
-                World.raycastEach(World.toTile(from.getX()), World.toTile(from.getY()), World.toTile(to.getX()), World.toTile(to.getY()), (wx, wy) -> {
-
-                    Tile tile = world.tile(wx, wy);
-                    if(tile != null && (tile.build != null && tile.build.isInsulated()) && tile.team() != team){
-                        bhit = true;
-                        //snap it instead of removing
-                        lines.get(lines.size - 1).set(wx * tilesize, wy * tilesize);
-                        return true;
-                    }
-                    return false;
-                });
+                RaycastParams params = new RaycastParams(
+                        World.toTile(from.getX()),
+                        World.toTile(from.getY()),
+                        World.toTile(to.getX()),
+                        World.toTile(to.getY()),
+                        (wx, wy) -> {
+                            Tile tile = world.tile(wx, wy);
+                            if(tile != null && (tile.build != null && tile.build.isInsulated()) && tile.team() != team){
+                                bhit = true;
+                                //snap it instead of removing
+                                lines.get(lines.size - 1).set(wx * tilesize, wy * tilesize);
+                                return true;
+                            }
+                            return false;
+                        }
+                );
+                World.raycastEach(params);
                 if(bhit) break;
             }
 
