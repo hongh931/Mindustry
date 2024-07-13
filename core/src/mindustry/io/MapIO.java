@@ -47,7 +47,7 @@ public class MapIO{
 
     public static void writeMap(Fi file, Map map) throws IOException{
         try{
-            SaveIO.write(file, map.tags);
+            SaveFileWrite.write(file, map.tags);
         }catch(Exception e){
             throw new IOException(e);
         }

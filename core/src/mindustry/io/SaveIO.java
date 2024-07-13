@@ -40,23 +40,10 @@ public class SaveIO{
         boolean exists = file.exists();
         if(exists) file.moveTo(SaveBackupManager.backupFileFor(file));
         try{
-            write(file);
+            SaveFileWrite.write(file);
         }catch(Throwable e){
             if(exists) SaveBackupManager.backupFileFor(file).moveTo(file);
             throw new RuntimeException(e);
-        }
-    }
-
-    public static boolean isSaveValid(Fi file){
-        return isSaveFileValid(file) || isSaveFileValid(SaveBackupManager.backupFileFor(file));
-    }
-
-    private static boolean isSaveFileValid(Fi file){
-        try(DataInputStream stream = new DataInputStream(new InflaterInputStream(file.read(bufferSize)))){
-            getMeta(stream);
-            return true;
-        }catch(Throwable e){
-            return false;
         }
     }
 
@@ -82,31 +69,6 @@ public class SaveIO{
             stream.close();
             return meta;
         }catch(IOException e){
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void write(Fi file, StringMap tags){
-        write(new FastDeflaterOutputStream(file.write(false, bufferSize)), tags);
-    }
-
-    public static void write(Fi file){
-        write(file, null);
-    }
-
-    public static void write(OutputStream os, StringMap tags){
-        try(DataOutputStream stream = new DataOutputStream(os)){
-            Events.fire(new SaveWriteEvent());
-            SaveVersion ver = versionArray.peek();
-
-            stream.write(header);
-            stream.writeInt(ver.version);
-            if(tags == null){
-                ver.write(stream);
-            }else{
-                ver.write(stream, tags);
-            }
-        }catch(Throwable e){
             throw new RuntimeException(e);
         }
     }

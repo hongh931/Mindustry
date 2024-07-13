@@ -221,7 +221,7 @@ public class IOSLauncher extends IOSApplication.Delegate{
             if(file.extension().equalsIgnoreCase(saveExtension)){ //open save
 
                 try{
-                    if(SaveIO.isSaveValid(file)){
+                    if(SaveBackupManager.isSaveValid(file)){
                         SaveMeta meta = SaveIO.getMeta(new DataInputStream(new InflaterInputStream(file.read(Streams.defaultBufferSize))));
                         if(meta.tags.containsKey("name")){
                             //is map

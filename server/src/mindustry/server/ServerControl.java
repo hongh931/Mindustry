@@ -932,7 +932,7 @@ public class ServerControl implements ApplicationListener{
                 return;
             }
 
-            if(!SaveIO.isSaveValid(newestSave)){
+            if(!SaveBackupManager.isSaveValid(newestSave)){
                 err("No (valid) save data found for slot.");
                 return;
             }
@@ -958,7 +958,7 @@ public class ServerControl implements ApplicationListener{
 
             Fi file = saveDirectory.child(arg[0] + "." + saveExtension);
 
-            if(!SaveIO.isSaveValid(file)){
+            if(!SaveBackupManager.isSaveValid(file)){
                 err("No (valid) save data found for slot.");
                 return;
             }

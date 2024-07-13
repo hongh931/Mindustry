@@ -865,7 +865,7 @@ public class ApplicationTests{
 
         checkPayloads();
 
-        SaveIO.write(saveDirectory.child("payloads.msav"));
+        SaveFileWrite.write(saveDirectory.child("payloads.msav"));
         logic.reset();
         SaveIO.load(saveDirectory.child("payloads.msav"));
 

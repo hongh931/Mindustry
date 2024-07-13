@@ -191,7 +191,7 @@ public class LoadDialog extends BaseDialog{
 
         buttons.button("@save.import", Icon.add, () -> {
             platform.showFileChooser(true, saveExtension, file -> {
-                if(SaveIO.isSaveValid(file)){
+                if(SaveBackupManager.isSaveValid(file)){
                     var meta = SaveIO.getMeta(file);
 
                     if(meta.rules.sector != null){

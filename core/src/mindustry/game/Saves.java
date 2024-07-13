@@ -52,7 +52,7 @@ public class Saves{
         Seq<Future<SaveSlot>> futures = new Seq<>();
 
         for(Fi file : saveDirectory.list()){
-            if(!file.name().contains("backup") && SaveIO.isSaveValid(file)){
+            if(!file.name().contains("backup") && SaveBackupManager.isSaveValid(file)){
                 futures.add(mainExecutor.submit(() -> {
                     SaveSlot slot = new SaveSlot(file);
                     slot.meta = SaveIO.getMeta(file);
