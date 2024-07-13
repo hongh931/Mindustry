@@ -47,14 +47,6 @@ public class SaveIO{
         }
     }
 
-    public static DataInputStream getStream(Fi file){
-        return new DataInputStream(new InflaterInputStream(file.read(bufferSize)));
-    }
-
-    public static DataInputStream getBackupStream(Fi file){
-        return new DataInputStream(new InflaterInputStream(backupFileFor(file).read(bufferSize)));
-    }
-
     public static boolean isSaveValid(Fi file){
         return isSaveFileValid(file) || isSaveFileValid(backupFileFor(file));
     }
@@ -68,21 +60,12 @@ public class SaveIO{
         }
     }
 
-    public static boolean isSaveValid(DataInputStream stream){
-        try{
-            getMeta(stream);
-            return true;
-        }catch(Throwable e){
-            return false;
-        }
-    }
-
     public static SaveMeta getMeta(Fi file){
         try{
-            return getMeta(getStream(file));
+            return getMeta(new DataInputStream(new InflaterInputStream(file.read(bufferSize))));
         }catch(Throwable e){
             Log.err(e);
-            return getMeta(getBackupStream(file));
+            return getMeta(new DataInputStream(new InflaterInputStream(backupFileFor(file).read(bufferSize))));
         }
     }
 
@@ -103,10 +86,6 @@ public class SaveIO{
         }
     }
 
-    public static Fi fileFor(int slot){
-        return saveDirectory.child(slot + "." + Vars.saveExtension);
-    }
-
     public static Fi backupFileFor(Fi file){
         return file.sibling(file.name() + "-backup." + file.extension());
     }
@@ -122,7 +101,7 @@ public class SaveIO{
     public static void write(OutputStream os, StringMap tags){
         try(DataOutputStream stream = new DataOutputStream(os)){
             Events.fire(new SaveWriteEvent());
-            SaveVersion ver = getVersion();
+            SaveVersion ver = versionArray.peek();
 
             stream.write(header);
             stream.writeInt(ver.version);
@@ -177,10 +156,6 @@ public class SaveIO{
             world.setGenerating(false);
             content.setTemporaryMapper(null);
         }
-    }
-
-    public static SaveVersion getVersion(){
-        return versionArray.peek();
     }
 
     public static void readHeader(DataInput input) throws IOException{
