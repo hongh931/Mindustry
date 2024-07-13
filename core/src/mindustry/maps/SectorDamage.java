@@ -531,7 +531,7 @@ public class SectorDamage{
                                 indexer.notifyHealthChanged(other.build);
                             }
 
-                        }else if(other.solid() && !other.synthetic()){ //skip damage propagation through solid blocks
+                        }else if(other.solid() && !Block.synthetic(other)){ //skip damage propagation through solid blocks
                             continue;
                         }
 

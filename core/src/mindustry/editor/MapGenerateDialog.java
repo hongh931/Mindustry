@@ -174,7 +174,7 @@ public class MapGenerateDialog extends BaseDialog{
                     Block block = content.block(PackTile.block(write)), floor = content.block(PackTile.floor(write)), overlay = content.block(PackTile.overlay(write));
 
                     //don't mess up synthetic stuff.
-                    if(!tile.synthetic() && !block.synthetic()){
+                    if(!Block.synthetic(tile) && !block.synthetic()){
                         tile.setBlock(block);
                     }
 

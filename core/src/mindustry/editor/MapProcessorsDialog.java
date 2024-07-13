@@ -37,7 +37,7 @@ public class MapProcessorsDialog extends BaseDialog{
             for(int y = 0; y < Vars.world.height(); y++){
                 for(int x = 0; x < Vars.world.width(); x++){
                     Tile tile = Vars.world.rawTile(x, y);
-                    if(!tile.synthetic()){
+                    if(!Block.synthetic(tile)){
                         foundAny = true;
                         tile.setNet(Blocks.worldProcessor, Team.sharded, 0);
                         if(ui.editor.isShown()){

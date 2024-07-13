@@ -144,10 +144,10 @@ public enum EditorTool{
             }else if(mode == 1){ //mode 1 is team fill
 
                 //only fill synthetic blocks, it's meaningless otherwise
-                if(tile.synthetic()){
+                if(Block.synthetic(tile)){
                     Team dest = tile.team();
                     if(dest == editor.drawTeam) return;
-                    fill(x, y, true, t -> t.getTeamID() == dest.id && t.synthetic(), t -> t.setTeam(editor.drawTeam));
+                    fill(x, y, true, t -> t.getTeamID() == dest.id && Block.synthetic(t), t -> t.setTeam(editor.drawTeam));
                 }
             }else if(mode == 2){ //erase mode
                 Boolf<Tile> tester;

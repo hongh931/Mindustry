@@ -54,7 +54,7 @@ public class SpawnPathFilter extends GenerateFilter{
                             int wx = tile.x + x, wy = tile.y + y;
                             if(Structs.inBounds(wx, wy, world.width(), world.height()) && Mathf.within(x, y, radius)){
                                 Tile other = tiles.getn(wx, wy);
-                                if(!other.synthetic()){
+                                if(!Block.synthetic(other)){
                                     other.setBlock(block);
                                 }
                             }
