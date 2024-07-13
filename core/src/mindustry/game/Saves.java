@@ -361,8 +361,8 @@ public class Saves{
         }
 
         public void delete(){
-            if(SaveIO.backupFileFor(file).exists()){
-                SaveIO.backupFileFor(file).delete();
+            if(SaveBackupManager.backupFileFor(file).exists()){
+                SaveBackupManager.backupFileFor(file).delete();
             }
             file.delete();
             saves.remove(this, true);

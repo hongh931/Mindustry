@@ -38,17 +38,17 @@ public class SaveIO{
 
     public static void save(Fi file){
         boolean exists = file.exists();
-        if(exists) file.moveTo(backupFileFor(file));
+        if(exists) file.moveTo(SaveBackupManager.backupFileFor(file));
         try{
             write(file);
         }catch(Throwable e){
-            if(exists) backupFileFor(file).moveTo(file);
+            if(exists) SaveBackupManager.backupFileFor(file).moveTo(file);
             throw new RuntimeException(e);
         }
     }
 
     public static boolean isSaveValid(Fi file){
-        return isSaveFileValid(file) || isSaveFileValid(backupFileFor(file));
+        return isSaveFileValid(file) || isSaveFileValid(SaveBackupManager.backupFileFor(file));
     }
 
     private static boolean isSaveFileValid(Fi file){
@@ -65,7 +65,7 @@ public class SaveIO{
             return getMeta(new DataInputStream(new InflaterInputStream(file.read(bufferSize))));
         }catch(Throwable e){
             Log.err(e);
-            return getMeta(new DataInputStream(new InflaterInputStream(backupFileFor(file).read(bufferSize))));
+            return getMeta(new DataInputStream(new InflaterInputStream(SaveBackupManager.backupFileFor(file).read(bufferSize))));
         }
     }
 
@@ -84,10 +84,6 @@ public class SaveIO{
         }catch(IOException e){
             throw new RuntimeException(e);
         }
-    }
-
-    public static Fi backupFileFor(Fi file){
-        return file.sibling(file.name() + "-backup." + file.extension());
     }
 
     public static void write(Fi file, StringMap tags){
