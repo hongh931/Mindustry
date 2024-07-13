@@ -65,7 +65,7 @@ public class World{
     public boolean passable(int x, int y){
         Tile tile = tile(x, y);
 
-        return tile != null && tile.passable();
+        return tile != null && Block.passable(tile.floor(), tile.block());
     }
 
     public boolean wallSolid(int x, int y){

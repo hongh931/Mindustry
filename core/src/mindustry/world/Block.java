@@ -1427,4 +1427,13 @@ public class Block extends UnlockableContent implements Senseable{
         if(sensor == LAccess.name) return name;
         return noSensed;
     }
+
+    public static boolean passable(Floor floor, Block block){
+        return !((floor.solid && (block == Blocks.air || block.solidifes)) || (block.solid && (!block.destructible && !block.update)));
+    }
+
+    /** Whether this block was placed by a player/unit. */
+    public static boolean synthetic(Tile tile){
+        return tile.block().update || tile.block().destructible;
+    }
 }

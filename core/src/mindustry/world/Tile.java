@@ -412,10 +412,6 @@ public class Tile implements Position, QuadTreeObject, Displayable{
         setOverlayID((short)0);
     }
 
-    public boolean passable(){
-        return !((floor.solid && (block == Blocks.air || block.solidifes)) || (block.solid && (!block.destructible && !block.update)));
-    }
-
     /** Whether this block was placed by a player/unit. */
     public boolean synthetic(){
         return block.update || block.destructible;
